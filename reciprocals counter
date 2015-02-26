@@ -1,0 +1,156 @@
+% CREATED BY GAIA SILVESTRI, JUNE 2014
+% This program counts the proportion of reciprocal connections to non
+% reciprocal connections in a network defined by a sparse matrix with zero
+% self-connections.
+Ne=800;
+Ni=200;
+n=Ne+Ni;
+MATRIX=zeros(n,n);
+increment=0.05;    %0.05=5% more synapses are added at each iteration
+target=0;
+totzeros=0;
+    
+% When proportion means # reciprocals/tot. possible connections
+% (EE/II/EI/IE) propflag=0. When proportion means
+% #reciprocals/#nonreciprocals, propflag=1
+propflag=1;
+% For the proportion of reciprocal EE connections to non-reciprocal EE set EE=1
+EE=1;
+% For the proportion of reciprocal II connections to non-reciprocal II set II=1
+II=1;
+% For the proportion of reciprocal EI connections to non-reciprocal EI set EI=1
+EI=1;
+% For the proportion of reciprocal IE connections to non-reciprocal IE set IE=1
+IE=1;
+
+% Count of reciprocal and non reciprocal EE connections
+reciprocalEE=0;
+nonreciprocalEE=0;
+proportionEE=0;
+% Count of reciprocal and non reciprocal II connections
+reciprocalII=0;
+nonreciprocalII=0;
+proportionII=0;
+% Count of reciprocal and non reciprocal EI connections
+reciprocalEIandIE=0;
+reciprocalEI=0;
+nonreciprocalEI=0;
+proportionEIandIE=0;
+proportionEI=0;
+% Count of reciprocal and non reciprocal IE connections
+reciprocalIE=0;
+nonreciprocalIE=0;
+proportionIE=0;
+totsynapses=0;
+
+% Updates reciprocal and nonreciprocal connections counters, calculates
+% proportion of reciprocal to non-reciprocal connections
+% Note: i is row, j is column
+for runs=1:20     %by the 20th run,99% of the synapses are active       
+    for i=1:Ne+Ni
+        for j=1:Ne+Ni
+          
+            if MATRIX(i,j) == 0 && i~=j    %no self connections
+                if rand<increment
+                    MATRIX(i,j)=rand(1,1);
+                    totsynapses=totsynapses+1;
+                end
+                
+            end
+            if j<Ne
+                MATRIX(i,j)=0.5*MATRIX(i,j);
+            end
+            if j>Ne
+                MATRIX(i,j)=-MATRIX(i,j);
+            end
+        end
+    end
+    increment=increment+increment;
+if EE==1
+    for i=1:Ne
+        goTo=i+1;
+        for j=goTo:Ne
+           if MATRIX(i,j)>0 && MATRIX(j,i)>0
+                 reciprocalEE=reciprocalEE+1;
+                 else 
+                 nonreciprocalEE=nonreciprocalEE+1;
+           end
+        end
+    end    
+    if propflag==1
+        proportionEE=reciprocalEE/nonreciprocalEE;
+        else
+        proportionEE=reciprocalEE/(((Ne*Ne)/2)-(Ne/2)); %gets rid of self-connections too
+    end
+end
+
+if II==1
+    for i=Ne+1:n
+        goTo=i+1;
+        if goTo>n
+            break
+        end
+        for j=goTo:n
+           if MATRIX(i,j)<0 && MATRIX(j,i)<0% there are only 0 or negative synapses
+                 reciprocalII=reciprocalII+1;
+                 else 
+                 nonreciprocalII=nonreciprocalII+1;
+           end
+        end
+    end   
+    if propflag==1
+        proportionII=reciprocalII/nonreciprocalII;
+        else
+        proportionII=reciprocalII/(((Ni*Ni)/2)-(Ni/2)); %gets rid of self-connections too
+    end
+end
+
+if EI==1 && IE==1
+    for i=1:Ne
+        for j=Ne+1:n
+           if MATRIX(i,j)<0 && MATRIX(j,i)>0% there are only 0, negative or positive synapses
+                 reciprocalEIandIE=reciprocalEIandIE+1; %they are equal/same thing
+                 reciprocalEI=reciprocalEI+1;
+                 reciprocalIE=reciprocalIE+1;
+           end
+           if MATRIX(i,j)<0 && MATRIX(j,i)==0
+                 nonreciprocalEI=nonreciprocalEI+1;
+           end    
+           if MATRIX(i,j)==0 && MATRIX(j,i)>0
+                 nonreciprocalIE=nonreciprocalIE+1;
+           end
+           
+        end
+    end
+    if propflag==1
+    proportionEI=reciprocalEI/nonreciprocalEI;
+    proportionIE=reciprocalIE/nonreciprocalIE;
+    else
+    proportionEI=reciprocalEI/(Ne*Ni); %no self connections to worry about
+    proportionIE=reciprocalIE/(Ne*Ni);
+    end
+end
+
+hold on
+subplot(2,1,1)
+hold on
+title('Proportion of reciprocals to non reciprocal connections')
+xlabel('0<connectivity<1')
+ylabel('prop. reciprocals to non reciprocals')
+legend('proportionEI','proportionIE','proportionII', 'proportionEE','Location','northwest')
+%plot against RUNS for motifs, plot against target for RANDOM
+plot(runs,proportionEI,'k*'); %proportionEI
+plot(runs,proportionIE,'m.'); %proportionIE might differ from EI since nonreciprocals may not be equal
+plot(runs,proportionII,'r.');
+plot(runs,proportionEE,'c.');
+
+subplot(2,1,2)
+hold on
+title('Number of reciprocal connections')
+xlabel('0<connectivity<1')
+ylabel('# of reciprocals')
+legend('reciprocalEI/IE','reciprocalII', 'reciprocalEE','Location','northwest')
+plot(runs,reciprocalEIandIE,'k.');
+plot(runs,reciprocalII,'r.');
+plot(runs,reciprocalEE,'c.');
+end
