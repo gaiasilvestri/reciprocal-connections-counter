@@ -2,6 +2,7 @@
 % This program counts the proportion of reciprocal connections to non
 % reciprocal connections in a network defined by a sparse matrix with zero
 % self-connections.
+% E-E,I-I,E-I,I-E connections are all calculated separately for comparisons
 Ne=800;
 Ni=200;
 n=Ne+Ni;
